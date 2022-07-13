@@ -3,52 +3,25 @@ package App;
 import model.DBConnection;
 import model.Page;
 import model.PageDao;
-import org.hibernate.Session;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import model.PageDaoImpl;
+import siteParser.Parser;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.ForkJoinPool;
 
 public class Application {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+
+        Long start = System.currentTimeMillis();
 
         DBConnection.initDb();
+        Parser parser = new Parser("http://www.playback.ru/");
+        //Parser parser = new Parser("http://www.uderzo.it/main_products/space_sniffer/download_alt.html/", "http://www.uderzo.it");
+        ForkJoinPool pool = new ForkJoinPool();
+        pool.invoke(parser);
 
-
-        Document doc = Jsoup.connect("http://www.playback.ru/")
-                .userAgent("AdvancedSearchBot")
-                .referrer("http://www.google.com")
-                .get();
-
-
-        PageDao pageDao = new PageDao();
-        pageDao.openCurrentSessionWithTransaction();
-
-        Elements elements = doc.select("a");
-        for (Element e : elements) {
-            String currentLink = e.absUrl("href");
-
-            try {
-                org.jsoup.Connection.Response currentConnection = Jsoup.connect(currentLink)
-                        .userAgent("AdvancedSearchBot")
-                        .referrer("http://www.google.com")
-                        .execute();
-
-                Page page = new Page();
-                page.setPath(currentLink);
-                page.setCode(currentConnection.statusCode());
-                page.setContent(currentConnection.body());
-                pageDao.createPage(page);
-            } catch (IllegalArgumentException ex) {
-                System.err.println("Ссылка не поддерживается: " + ex.getMessage());
-            }
-        }
-
-
+        System.out.println("Время парсинга: " + ((System.currentTimeMillis() - start) / 1000) + " секунд");
     }
 
 }

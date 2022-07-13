@@ -16,7 +16,7 @@ public class DBConnection {
         if (connection == null) {
             try {
                 connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + dbName, dbUser, dbPass);
-                //createPageTable();
+                createPageTable();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -38,6 +38,7 @@ public class DBConnection {
                 "code INT NOT NULL, " +
                 "content MEDIUMTEXT NOT NULL, " +
                 "PRIMARY KEY(id))");
+                //UNIQUE KEY path_key (path(50))
         connection.createStatement().execute("CREATE INDEX page_index ON page (path(50));");
     }
 

@@ -1,87 +1,29 @@
 package model;
 
-import App.HibernateSessionFactory;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
-public class PageDao {
+public interface PageDao {
 
-    private Session currentSession;
-    private Transaction currentTransaction;
+    //get
+    Page getPageById(int id);
 
-    public PageDao() {
-    }
+    Page getPageByPath(String path);
 
-    public Session openCurrentSession() {
-        currentSession = HibernateSessionFactory.getSessionFactory().openSession();
-        return currentSession;
-    }
+    List<Page> getAllPages();
 
-    public Session openCurrentSessionWithTransaction() {
-        currentSession = HibernateSessionFactory.getSessionFactory().openSession();
-        currentTransaction = currentSession.beginTransaction();
-        return currentSession;
-    }
+    //create
+    void createPage(Page page);
 
-    public void closeCurrentSession() {
-        currentSession.close();
-    }
+    void createAll(List<Page> pages);
 
-    public void closeCurrentSessionWithTransaction() {
-        currentTransaction.commit();
-        currentSession.close();
-    }
+    //delete
+    boolean deletePage(int id);
+
+    void deleteAllPages();
+
+    //update
+    boolean updatePage(int id, Page updatedPage);
 
 
-    public void createPage(Page page) {
-        currentSession.save(page);
-    }
-
-    public boolean deletePage(int id) {
-        try {
-            Page loadPage = currentSession.load(Page.class, id);
-            currentSession.delete(loadPage);
-            currentSession.flush();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public List<Page> getAllPages() {
-        return (List<Page>) currentSession.createQuery("from Page").list();
-    }
-
-    public model.Page getPage(int id) {
-        return currentSession.get(Page.class, id);
-    }
-
-    public boolean updatePage(int id, Page updatedPage) {
-        try {
-            Page loadPage = currentSession.load(Page.class, id);
-            loadPage.setPath(updatedPage.getPath());
-            loadPage.setCode(updatedPage.getCode());
-            loadPage.setContent(updatedPage.getContent());
-
-            currentSession.update(loadPage);
-            currentSession.flush();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public void deleteAllPages() {
-        List<Page> entityList = getAllPages();
-        for (Page entity : entityList) {
-            deletePage(entity.getId());
-        }
-    }
 
 }
