@@ -1,6 +1,7 @@
 package model;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "page")
@@ -42,5 +43,18 @@ public class Page {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Page page = (Page) o;
+        return id == page.id && code == page.code && Objects.equals(path, page.path) && Objects.equals(content, page.content);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, path, code, content);
     }
 }
