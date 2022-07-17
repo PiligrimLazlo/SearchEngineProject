@@ -1,4 +1,4 @@
-package App;
+package main.App;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;

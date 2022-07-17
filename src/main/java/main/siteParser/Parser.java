@@ -1,8 +1,6 @@
-package siteParser;
+package main.siteParser;
 
-import model.Page;
-import model.PageDao;
-import model.PageDaoImpl;
+import main.model.Page;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -20,7 +18,6 @@ public class Parser extends RecursiveAction {
 
     private String site;
     private String parentDomain;
-    private PageDao dao;
 
     private static final Map<String, Page> pages = new HashMap<>();
 
@@ -29,7 +26,6 @@ public class Parser extends RecursiveAction {
     public Parser(String site) {
         this.site = site;
         this.parentDomain = site;
-        dao = new PageDaoImpl();
     }
 
     //for subtasks
@@ -37,7 +33,6 @@ public class Parser extends RecursiveAction {
         this.site = subSite;
         this.parentDomain = parentSite;
 
-        dao = new PageDaoImpl();
     }
 
 

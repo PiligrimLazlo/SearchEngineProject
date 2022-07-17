@@ -1,4 +1,4 @@
-package model;
+package main.model;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
