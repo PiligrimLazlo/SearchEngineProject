@@ -1,4 +1,4 @@
-package main.OldWay;
+package main.temp;
 
 import main.model.Page;
 

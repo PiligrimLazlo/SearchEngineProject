@@ -1,4 +1,4 @@
-package main.OldWay;
+package main.temp;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;

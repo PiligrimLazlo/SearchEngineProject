@@ -1,4 +1,4 @@
-package main.OldWay;
+package main;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

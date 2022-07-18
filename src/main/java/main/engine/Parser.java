@@ -1,6 +1,9 @@
-package main.siteParser;
+package main.engine;
 
+import lombok.extern.log4j.Log4j2;
 import main.model.Page;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -14,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 
+@Log4j2
 public class Parser extends RecursiveAction {
 
     private String site;
@@ -32,7 +36,6 @@ public class Parser extends RecursiveAction {
     public Parser(String subSite, String parentSite) {
         this.site = subSite;
         this.parentDomain = parentSite;
-
     }
 
 
@@ -61,7 +64,7 @@ public class Parser extends RecursiveAction {
             ForkJoinTask.invokeAll(subParsers);
 
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            log.error(e.getMessage() + " поймано в методе compute()");
         }
     }
 
@@ -77,20 +80,19 @@ public class Parser extends RecursiveAction {
             page.setCode(response.statusCode());
             page.setContent(response.body());
             pages.put(currentShortPath, page);
-            System.out.println(currentShortPath +
-                    " - записана ссылка с помощью потока : " + Thread.currentThread().getName());
+            log.info(site + " - записана ссылка");
             return true;
         }/* catch (HttpStatusException httpStatusEx) {
             page.setCode(httpStatusEx.getStatusCode());
             page.setContent("");
             pages.put(currentShortPath, page);
-            return true;
+            log.info(site + " - записана ссылка c кодом отличном от 200");
+            return true; //TODO
         }*/ catch (UnsupportedMimeTypeException mimeTypeEx) {
-            System.err.println(mimeTypeEx.getUrl() +
-                    " - тип ссылки не поддерживается (передана ссылка на картинку, zip и т.д.)");
+            log.warn(mimeTypeEx.getUrl() + " - тип ссылки не поддерживается (передана ссылка на картинку, zip и т.д.)");
             return false;
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
+        } catch (IOException ioEx) {
+            log.error(ioEx.getMessage() + " поймано в методе: putInMap(Connection connection)");
             return false;
         }
     }
