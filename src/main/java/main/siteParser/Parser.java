@@ -80,12 +80,12 @@ public class Parser extends RecursiveAction {
             System.out.println(currentShortPath +
                     " - записана ссылка с помощью потока : " + Thread.currentThread().getName());
             return true;
-        } catch (HttpStatusException httpStatusEx) {
+        }/* catch (HttpStatusException httpStatusEx) {
             page.setCode(httpStatusEx.getStatusCode());
             page.setContent("");
             pages.put(currentShortPath, page);
             return true;
-        } catch (UnsupportedMimeTypeException mimeTypeEx) {
+        }*/ catch (UnsupportedMimeTypeException mimeTypeEx) {
             System.err.println(mimeTypeEx.getUrl() +
                     " - тип ссылки не поддерживается (передана ссылка на картинку, zip и т.д.)");
             return false;

@@ -1,4 +1,6 @@
-package main.model;
+package main.OldWay;
+
+import main.model.Page;
 
 import java.util.List;
 

@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/search_engine?useSSL=false
+    username: root
+    password: PasswordforMySQL.2022
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+someParameter:
+  value: 5463

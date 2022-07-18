@@ -1,6 +1,6 @@
-package main.model;
+package main.OldWay;
 
-import main.App.HibernateSessionFactory;
+import main.model.Page;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
