@@ -76,8 +76,15 @@ public class Parser extends RecursiveAction {
         page.setPath(currentShortPath);
 
         try {
+            connection.ignoreHttpErrors(true);
+
             Connection.Response response = connection.execute();
-            page.setCode(response.statusCode());
+
+            int statusCode = response.statusCode();
+            if (statusCode != 200 && (response.contentType() == null || !response.contentType().equals("html/text")))
+                throw new UnsupportedMimeTypeException("msg", "unknown type", response.url().toString());
+
+            page.setCode(statusCode);
             page.setContent(response.body());
             pages.put(currentShortPath, page);
             log.info(site + " - записана ссылка");
@@ -87,7 +94,7 @@ public class Parser extends RecursiveAction {
             page.setContent("");
             pages.put(currentShortPath, page);
             log.info(site + " - записана ссылка c кодом отличном от 200");
-            return true; //TODO
+            return true;
         }*/ catch (UnsupportedMimeTypeException mimeTypeEx) {
             log.warn(mimeTypeEx.getUrl() + " - тип ссылки не поддерживается (передана ссылка на картинку, zip и т.д.)");
             return false;
