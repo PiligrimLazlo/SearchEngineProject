@@ -1,5 +1,6 @@
 package main;
 
+import main.engine.Lemmatizer;
 import main.model.PageRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -7,6 +8,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import main.engine.Parser;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 
 @Configuration
@@ -14,12 +18,10 @@ import java.util.concurrent.ForkJoinPool;
 public class Application {
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         Long start = System.currentTimeMillis();
 
-
-        //TODO try get rid of this
         //if need recreate db
         DBConnection.initDb();
 
@@ -36,7 +38,6 @@ public class Application {
 
         repository.saveAll(Parser.getPages());
         context.close();
-
 
         System.out.println("Время парсинга: " + ((System.currentTimeMillis() - start) / 1000) + " секунд");
     }
