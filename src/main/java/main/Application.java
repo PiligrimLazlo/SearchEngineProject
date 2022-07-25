@@ -32,8 +32,8 @@ public class Application {
         //test data
         //Parser parser = new Parser("https://www.nikoartgallery.com/");
         //Parser parser = new Parser("https://www.lutherancathedral.ru/");
-        Parser parser = new Parser("http://www.aot.ru/");
-        //Parser parser = new Parser("http://www.playback.ru/");
+        //Parser parser = new Parser("http://www.aot.ru/");
+        Parser parser = new Parser("http://www.playback.ru/");
         //Parser parser = new Parser("http://www.uderzo.it/main_products/space_sniffer/index.html", "http://www.uderzo.it/");
         parser.setFieldForIndex(fieldRepo.findAll());
 

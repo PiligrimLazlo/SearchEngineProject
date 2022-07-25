@@ -69,10 +69,11 @@ public class Parser extends RecursiveAction {
             Connection connection = Jsoup.connect(site)
                     .userAgent("AdvancedSearchBot")
                     .referrer("http://www.google.com/");
-            Document doc = connection.get();
 
             Page curPage = putPageInMap(connection);
             if (curPage == null) return;
+
+            Document doc = connection.get();
 
             Map<Integer, Lemma> curLemmas = putLemmasInMap(doc);
             Set<Index> indexes = createIndex(curPage, curLemmas);
@@ -105,9 +106,9 @@ public class Parser extends RecursiveAction {
      * @return boolean
      */
     private Page putPageInMap(Connection connection) {
-        Page page = new Page();
         String currentShortPath = getShortPath();
         if (pages.containsKey(currentShortPath)) return null;
+        Page page = new Page();
         page.setPath(currentShortPath);
 
         try {
