@@ -1,11 +1,9 @@
 package main.model;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -31,4 +29,17 @@ public class Page {
     @Getter
     @Setter
     private Set<Index> indexes;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Page page = (Page) o;
+        return id == page.id && code == page.code && Objects.equals(path, page.path) && Objects.equals(content, page.content);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, path, code, content);
+    }
 }

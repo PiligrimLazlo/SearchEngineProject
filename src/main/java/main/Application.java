@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import main.engine.Parser;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.util.Pair;
 
 import java.io.IOException;
@@ -18,11 +19,6 @@ public class Application {
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
-
-
-        //if need recreate db
-        DBCreator.initDb();
-
         ConfigurableApplicationContext context = SpringApplication.run(Application.class, args);
         FieldRepository fieldRepo = context.getBean(FieldRepository.class);
         LemmaRepository lemmaRepo = context.getBean(LemmaRepository.class);
@@ -30,21 +26,35 @@ public class Application {
         IndexRepository indexRepo = context.getBean(IndexRepository.class);
 
         //test data
-        //Parser parser = new Parser("https://www.nikoartgallery.com/");
-        //Parser parser = new Parser("https://www.lutherancathedral.ru/");
-        //Parser parser = new Parser("http://www.aot.ru/");
-        Parser parser = new Parser("http://www.playback.ru/");
-        //Parser parser = new Parser("http://www.uderzo.it/main_products/space_sniffer/index.html", "http://www.uderzo.it/");
+        String sitePath = "https://www.nikoartgallery.com/";
+        //String sitePath = "https://www.lutherancathedral.ru/";
+        //String sitePath = "http://www.aot.ru/";
+        //String sitePath = "http://www.playback.ru/";
+
+        createIndex(fieldRepo, indexRepo, sitePath);
+
+
+
+        context.close();
+    }
+
+
+    private static void createIndex(
+            FieldRepository fieldRepo,
+            IndexRepository indexRepo,
+            String sitePath
+    ) {
+        //if need recreate db
+        DBCreator.initDb();
+
+        Parser parser = new Parser(sitePath);
         parser.setFieldForIndex(fieldRepo.findAll());
 
         ForkJoinPool pool = ForkJoinPool.commonPool();
         pool.invoke(parser);
 
-
-        Map<Pair<String, String>, Index> pairIndexMap = Parser.getIndexMap();
-        indexRepo.saveAll(pairIndexMap.values());
-
-        context.close();
+        List<Index> indexes = Parser.getIndexes();
+        indexRepo.saveAll(indexes);
     }
 
 }

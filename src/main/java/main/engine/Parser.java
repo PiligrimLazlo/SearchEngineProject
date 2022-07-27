@@ -75,10 +75,10 @@ public class Parser extends RecursiveAction {
 
             Document doc = connection.get();
 
-            Map<Integer, Lemma> curLemmas = putLemmasInMap(doc);
+            Map<Lemma, Integer> curLemmas = putLemmasInMap(doc);
             Set<Index> indexes = createIndex(curPage, curLemmas);
             curPage.setIndexes(indexes);
-            curLemmas.forEach((amount, lemmaEntity) -> lemmaEntity.setIndexes(indexes));
+            curLemmas.forEach((lemmaEntity, amount) -> lemmaEntity.setIndexes(indexes));
 
 
             Elements elements = doc.select("a");
@@ -102,102 +102,105 @@ public class Parser extends RecursiveAction {
     /**
      * Создает сущность Page
      * Заполняет {@link #pages} - структуру хранения всех страниц сайта
+     *
      * @param connection
      * @return boolean
      */
     private Page putPageInMap(Connection connection) {
-        String currentShortPath = getShortPath();
-        if (pages.containsKey(currentShortPath)) return null;
-        Page page = new Page();
-        page.setPath(currentShortPath);
+        synchronized (pages) {
+            String currentShortPath = getShortPath();
+            if (pages.containsKey(currentShortPath)) return null;
+            Page page = new Page();
+            page.setPath(currentShortPath);
 
-        try {
-            connection.ignoreHttpErrors(true);
+            try {
+                connection.ignoreHttpErrors(true);
 
-            Connection.Response response = connection.execute();
+                Connection.Response response = connection.execute();
 
-            int statusCode = response.statusCode();
-            if (statusCode != 200 && (response.contentType() == null || !response.contentType().equals("html/text")))
-                throw new UnsupportedMimeTypeException("msg", "unknown type", response.url().toString());
+                int statusCode = response.statusCode();
+                if (statusCode != 200 && (response.contentType() == null || !response.contentType().equals("html/text")))
+                    throw new UnsupportedMimeTypeException("msg", "unknown type", response.url().toString());
 
-            page.setCode(statusCode);
-            page.setContent(response.body());
-            pages.put(currentShortPath, page);
-            log.info(currentShortPath + " - записана ссылка");
-            return page;
-        } catch (UnsupportedMimeTypeException mimeTypeEx) {
-            log.warn(mimeTypeEx.getUrl() + " - тип ссылки не поддерживается (передана ссылка на картинку, zip и т.д.)");
-            return null;
-        } catch (IOException ioEx) {
-            log.error(ioEx.getMessage() + " поймано в методе: putInMap(Connection connection)");
-            return null;
+                page.setCode(statusCode);
+                page.setContent(response.body());
+                pages.put(currentShortPath, page);
+                log.info(currentShortPath + " - записана ссылка");
+                return page;
+            } catch (UnsupportedMimeTypeException mimeTypeEx) {
+                log.warn(mimeTypeEx.getUrl() + " - тип ссылки не поддерживается (передана ссылка на картинку, zip и т.д.)");
+                return null;
+            } catch (IOException ioEx) {
+                log.error(ioEx.getMessage() + " поймано в методе: putInMap(Connection connection)");
+                return null;
+            }
         }
     }
 
     /**
      * Находит все леммы для текущей страницы. Создает сущности Lemma для каждой строковой леммы
      * Заполняет {@link #lemmaMap} - структуру хранения всех лемм сайта
+     *
      * @param doc
      * @throws IOException
      */
-    private Map<Integer, Lemma> putLemmasInMap(Document doc) throws IOException {
-        Map<Integer, Lemma> lemmaMapForCurrentThread = new HashMap<>();
+    private Map<Lemma, Integer> putLemmasInMap(Document doc) throws IOException {
+        synchronized (lemmaMap) {
+            Map<Lemma, Integer> lemmaMapForCurrentThread = new HashMap<>();
 
-        for (Field field : fieldsForIndex) {
-            Elements select = doc.select(field.getSelector());
-            String cleanPage = Jsoup.clean(select.toString(), Safelist.none());
+            for (Field field : fieldsForIndex) {
+                Elements select = doc.select(field.getSelector());
+                String cleanPage = Jsoup.clean(select.toString(), Safelist.none());
 
-            Map<String, Integer> foundLemmas = getLemmas(cleanPage);
+                Map<String, Integer> foundLemmas = Lemmatizer.getInstance().collectLemmas(cleanPage);
 
-            foundLemmas.forEach((foundLemma, amount) -> {
-                Lemma lemmaEntity = new Lemma();
-                lemmaEntity.setLemma(foundLemma);
+                foundLemmas.forEach((foundLemma, amount) -> {
 
-                if (!lemmaMap.containsKey(foundLemma)) {
-                    lemmaEntity.setFrequency(1);
-                } else {
-                    int existsFrequency = lemmaMap.get(foundLemma).getFrequency();
-                    lemmaEntity.setFrequency(existsFrequency + 1);
-                }
-                lemmaMapForCurrentThread.put(amount, lemmaEntity);
-                lemmaMap.put(foundLemma, lemmaEntity);
-            });
+                    Lemma lemmaEntity = null;
+                    if (!lemmaMap.containsKey(foundLemma)) {
+                        lemmaEntity = new Lemma();
+                        lemmaEntity.setFrequency(1);
+                        lemmaEntity.setLemma(foundLemma);
+                    } else {
+                        lemmaEntity = lemmaMap.get(foundLemma);
+                        int existsFrequency = lemmaEntity.getFrequency();
+                        lemmaEntity.setFrequency(existsFrequency + 1);
+                    }
+                    lemmaMapForCurrentThread.put(lemmaEntity, amount);
+                    lemmaMap.put(foundLemma, lemmaEntity);
+                });
+            }
+            return lemmaMapForCurrentThread;
         }
-        return lemmaMapForCurrentThread;
     }
 
     /**
      * Создает сущности Index по количеству лемм для каждой страницы
      * @throws IOException
      */
-    private Set<Index> createIndex(Page currentPage, Map<Integer, Lemma> currentLemmas) throws IOException {
+    private Set<Index> createIndex(Page currentPage, Map<Lemma, Integer> currentLemmas) throws IOException {
+        synchronized (indexMap) {
+            Map<Pair<String, String>, Index> indexesMapForCurrentThread = new ConcurrentHashMap<>();
 
-        Map<Pair<String, String>, Index> indexesMapForCurrentThread = new ConcurrentHashMap<>();
+            for (Field field : fieldsForIndex) {
+                currentLemmas.forEach((lemmaEntity, amount) -> {
 
-        for (Field field : fieldsForIndex) {
-            currentLemmas.forEach((amount, lemmaEntity) -> {
-
-                Pair<String, String> key = Pair.of(getShortPath(), lemmaEntity.getLemma());
-                Index curIndex = indexesMapForCurrentThread.get(key);
-                if (curIndex != null) {
-                    curIndex.setRank(curIndex.getRank() + field.getWeight() * amount);
-                } else {
-                    curIndex = new Index();
-                    curIndex.setPage(currentPage);
-                    curIndex.setLemma(lemmaEntity);
-                    curIndex.setRank(field.getWeight() * amount);
-                }
-                indexesMapForCurrentThread.put(key, curIndex);
-            });
+                    Pair<String, String> key = Pair.of(getShortPath(), lemmaEntity.getLemma());
+                    Index curIndex = indexesMapForCurrentThread.get(key);
+                    if (curIndex != null) {
+                        curIndex.setRank(curIndex.getRank() + field.getWeight() * amount);
+                    } else {
+                        curIndex = new Index();
+                        curIndex.setPage(currentPage);
+                        curIndex.setLemma(lemmaEntity);
+                        curIndex.setRank(field.getWeight() * amount);
+                    }
+                    indexesMapForCurrentThread.put(key, curIndex);
+                });
+            }
+            indexMap.putAll(indexesMapForCurrentThread);
+            return new HashSet<>(indexesMapForCurrentThread.values());
         }
-        indexMap.putAll(indexesMapForCurrentThread);
-        return new HashSet<>(indexesMapForCurrentThread.values());
-    }
-
-    private Map<String, Integer> getLemmas(String text) throws IOException {
-        Lemmatizer lemmatizer = Lemmatizer.getInstance();
-        return lemmatizer.collectLemmas(text);
-
     }
 
     private String getShortPath() {
@@ -211,8 +214,8 @@ public class Parser extends RecursiveAction {
     }
 
 
-    public static Map<Pair<String, String>, Index> getIndexMap() {
-        return indexMap;
+    public static List<Index> getIndexes() {
+        return new ArrayList<>(indexMap.values());
     }
 
     public void setFieldForIndex(Iterable<Field> filedForIndex) {

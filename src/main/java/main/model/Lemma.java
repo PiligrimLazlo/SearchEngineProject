@@ -1,11 +1,9 @@
 package main.model;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -29,4 +27,17 @@ public class Lemma {
     @Getter
     @Setter
     private Set<Index> indexes;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Lemma lemma1 = (Lemma) o;
+        return id == lemma1.id && frequency == lemma1.frequency && Objects.equals(lemma, lemma1.lemma);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, lemma, frequency);
+    }
 }
