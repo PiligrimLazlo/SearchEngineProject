@@ -14,7 +14,7 @@ public class Index {
     @Setter
     private int id;
 
-    @ManyToOne (fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne (fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "page_id", nullable = false)
     @Getter
     @Setter

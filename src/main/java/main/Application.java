@@ -1,13 +1,13 @@
 package main;
 
+import com.google.common.collect.Lists;
+import main.engine.Searcher;
 import main.model.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import main.engine.Parser;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.util.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -31,8 +31,12 @@ public class Application {
         //String sitePath = "http://www.aot.ru/";
         //String sitePath = "http://www.playback.ru/";
 
-        createIndex(fieldRepo, indexRepo, sitePath);
+        //createIndex(fieldRepo, indexRepo, sitePath);
 
+        Iterable<Index> siteIndexes = indexRepo.findAll();
+        Searcher searcher = new Searcher("свой жизнь", Lists.newArrayList(siteIndexes));
+
+        searcher.getSearchedPageList().forEach(System.out::println);
 
 
         context.close();
@@ -44,7 +48,7 @@ public class Application {
             IndexRepository indexRepo,
             String sitePath
     ) {
-        //if need recreate db
+        //only if need recreate db
         DBCreator.initDb();
 
         Parser parser = new Parser(sitePath);

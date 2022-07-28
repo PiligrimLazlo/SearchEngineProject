@@ -163,6 +163,9 @@ public class Parser extends RecursiveAction {
                         lemmaEntity.setLemma(foundLemma);
                     } else {
                         lemmaEntity = lemmaMap.get(foundLemma);
+
+                        if (lemmaMapForCurrentThread.containsKey(lemmaEntity)) return;
+
                         int existsFrequency = lemmaEntity.getFrequency();
                         lemmaEntity.setFrequency(existsFrequency + 1);
                     }
