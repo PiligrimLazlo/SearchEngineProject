@@ -43,6 +43,9 @@ public class Application {
     }
 
 
+    /**
+     * перезаписывает БД и индексирует переданный сайт
+     */
     private static void createIndex(
             FieldRepository fieldRepo,
             IndexRepository indexRepo,
