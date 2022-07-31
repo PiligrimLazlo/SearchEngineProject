@@ -4,6 +4,10 @@ import main.model.Index;
 import main.model.Lemma;
 import main.model.Page;
 import main.model.SearchedPage;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.safety.Safelist;
 
 import java.io.IOException;
 import java.util.*;
@@ -12,9 +16,10 @@ import java.util.stream.Collectors;
 public class Searcher {
 
     private List<SearchedPage> searchedPageList;
+    private String textToSearch;
 
     public Searcher(String textToSearch, List<Index> indexes) throws IOException {
-
+        this.textToSearch = textToSearch;
         List<Lemma> intersectedLemmas = getIntersectionOfSearchAndSiteLemmas(textToSearch, indexes);
 
         List<Page> foundPages = getPagesContainingIntersectedLemmas(intersectedLemmas);
@@ -90,7 +95,7 @@ public class Searcher {
 
 
     /**
-     *Если страницы (Page  в методе getPagesContainingIntersectedLemmas(List<Lemma> intersectedLemmas)) найдены,
+     * Если страницы (Page  в методе getPagesContainingIntersectedLemmas(List<Lemma> intersectedLemmas)) найдены,
      * рассчитывать по каждой из них релевантность.
      * Для этого для каждой страницы рассчитываем абсолютную релевантность —
      * сумму всех rank всех найденных на странице лемм (из таблицы index),
@@ -115,7 +120,7 @@ public class Searcher {
             SearchedPage searchedPage = new SearchedPage();
             searchedPage.setUri(p.getPath());
             searchedPage.setTitle(p.getContent().substring(p.getContent().indexOf("<title>") + 7, p.getContent().indexOf("</title>")));
-            searchedPage.setSnippet("<b>" + "the snippet" + "</b>"); //TODO где взять snippet
+            searchedPage.setSnippet(getSnippetsForCurrentPage(p));
             searchedPage.setRelevance(pagesRelevance[i] / maxAbsRelevance);
             searchedPageList.add(searchedPage);
         }
@@ -123,5 +128,68 @@ public class Searcher {
         searchedPageList.sort(Comparator.comparingDouble(SearchedPage::getRelevance));
 
         return searchedPageList;
+    }
+
+    /**
+     * Метод для получения фрагмента текста, в котором найдены совпадения, выделенные жирным, в формате HTML (этап 5 пункт 7)
+     * В качестве фрагментов приняты корневые элементы страницы (без дочерних, сущность Element из Jsoup)
+     * Для каждого такого Element мы извлекаем все леммы и далее находим пересечения с леммами из поискового запроса.
+     * При совпадении обрамляем в исходной строке (полученной путем вызова Element.toString()) слово тегами b
+     * Возвращаем строку равную исходному Element с леммами, выделенными жирным и многоточием в начале и конце
+     */
+    private String getSnippetsForCurrentPage(Page currentPage) {
+        Lemmatizer lemmatizer = null;
+        try {
+            lemmatizer = Lemmatizer.getInstance();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Set<String> lemmaSet = lemmatizer.getLemmaSet(textToSearch);
+        Document doc = Jsoup.parse(currentPage.getContent());
+
+        List<Element> elements = new ArrayList<>();
+        doc.forEach(element -> {
+            if (element.childrenSize() == 0) {
+                elements.add(element);
+            }
+        });
+
+        StringBuilder snippets = new StringBuilder();
+        for (Element element : elements) {
+            String startElementString = element.toString();
+            String result = element.toString();
+            String cleanElement = Jsoup.clean(element.toString(), Safelist.none());
+
+            if (cleanElement.isBlank()) continue;
+
+            String[] words = russianWordArrayFromString(cleanElement);
+
+            for (String w : words) {
+                Optional<String> curLemmaOpt = lemmatizer.getLemmaSet(w).stream().findFirst();
+                String curLemma;
+
+                if (curLemmaOpt.isPresent()) {
+                    curLemma = curLemmaOpt.get();
+                } else {
+                    continue;
+                }
+
+                if (lemmaSet.contains(curLemma)) {
+                    result = result.replaceAll(w, "<b>" + w + "</b>");
+                }
+            }
+            if (!startElementString.equals(result)) {
+                snippets.append("...").append(result).append("...\n");
+            }
+        }
+
+        return snippets.toString();
+    }
+
+    private String[] russianWordArrayFromString(String text) {
+        return text.replaceAll("([^а-яА-Я\\s])", " ")
+                .trim()
+                .split("\\s+");
     }
 }
