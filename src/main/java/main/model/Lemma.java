@@ -13,12 +13,17 @@ public class Lemma {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
     @Setter
+    @Column(nullable = false)
     private int id;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private String lemma;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private int frequency;
 
 
@@ -27,6 +32,11 @@ public class Lemma {
     @Getter
     @Setter
     private Set<Index> indexes;
+
+    @Getter
+    @Setter
+    @ManyToOne
+    private Site site;
 
     @Override
     public boolean equals(Object o) {

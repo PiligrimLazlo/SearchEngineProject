@@ -15,15 +15,22 @@ public class Field {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
     @Setter
+    @Column(nullable = false)
     private int id;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private String name;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private String selector;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private float weight;
 
     @Override

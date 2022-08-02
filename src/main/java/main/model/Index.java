@@ -12,6 +12,7 @@ public class Index {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
     @Setter
+    @Column(nullable = false)
     private int id;
 
     @ManyToOne (fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -26,7 +27,7 @@ public class Index {
     @Setter
     private Lemma lemma;
 
-    @Column(name = "`rank`")
+    @Column(name = "`rank`", nullable = false)
     @Getter
     @Setter
     private float rank;

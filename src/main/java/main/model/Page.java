@@ -13,15 +13,22 @@ public class Page {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Getter
     @Setter
+    @Column(nullable = false)
     private int id;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private String path;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private int code;
+
     @Getter
     @Setter
+    @Column(nullable = false)
     private String content;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "page")
@@ -29,6 +36,11 @@ public class Page {
     @Getter
     @Setter
     private Set<Index> indexes;
+
+    @Getter
+    @Setter
+    @ManyToOne
+    private Site site;
 
     @Override
     public boolean equals(Object o) {

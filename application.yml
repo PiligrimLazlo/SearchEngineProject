@@ -7,5 +7,12 @@ spring:
     hibernate:
       ddl-auto: none
 
-someParameter:
-  value: 5463
+sites:
+  - url: https://www.nikoartgallery.com/
+    name: Галерея и креативное пространство Нико
+  - url: http://www.playback.ru/
+    name: Интернет магазин PlayBack.ru
+  - url: http://www.aot.ru/
+    name: Автоматическая обработка текста
+user-agent: AdvancedSearchBot
+web-interface-path: /admin

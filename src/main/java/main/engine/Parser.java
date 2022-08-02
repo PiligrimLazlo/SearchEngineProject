@@ -36,9 +36,9 @@ public class Parser extends RecursiveAction {
      * Структуры хранения данных java. В единственном экземпляре для всех потоков.
      * Далее {@link #indexMap} отдается наружу для заполнения БД.
      */
-    private static final Map<String, Page> pages = new ConcurrentHashMap<>();
-    private static final Map<String, Lemma> lemmaMap = new ConcurrentHashMap<>();
-    private static final Map<Pair<String, String>, Index> indexMap = new ConcurrentHashMap<>();
+    private final Map<String, Page> pages;
+    private final Map<String, Lemma> lemmaMap;
+    private final Map<Pair<String, String>, Index> indexMap;
 
     private static Iterable<Field> fieldsForIndex;//передаем снаружи, здесь не работаем с БД
 
@@ -47,12 +47,26 @@ public class Parser extends RecursiveAction {
     public Parser(String site) {
         this.site = site;
         this.parentDomain = site;
+
+        pages = new ConcurrentHashMap<>();
+        lemmaMap = new ConcurrentHashMap<>();
+        indexMap = new ConcurrentHashMap<>();
     }
 
     //for subtasks
-    public Parser(String subSite, String parentSite) {
+    public Parser(
+            String subSite,
+            String parentSite,
+            Map<String, Page> pages,
+            Map<String, Lemma> lemmaMap,
+            Map<Pair<String, String>, Index> indexMap
+    ) {
         this.site = subSite;
         this.parentDomain = parentSite;
+
+        this.pages = pages;
+        this.lemmaMap = lemmaMap;
+        this.indexMap = indexMap;
     }
 
 
@@ -87,7 +101,7 @@ public class Parser extends RecursiveAction {
             for (Element e : elements) {
                 String currentLink = e.absUrl("href");
                 if (currentLink.contains(parentDomain)) {
-                    Parser parser = new Parser(currentLink, parentDomain);
+                    Parser parser = new Parser(currentLink, parentDomain, pages, lemmaMap, indexMap);
                     subParsers.add(parser);
                 }
             }
@@ -179,6 +193,7 @@ public class Parser extends RecursiveAction {
 
     /**
      * Создает сущности Index по количеству лемм для каждой страницы
+     *
      * @throws IOException
      */
     private Set<Index> createIndex(Page currentPage, Map<Lemma, Integer> currentLemmas) throws IOException {
@@ -217,7 +232,7 @@ public class Parser extends RecursiveAction {
     }
 
 
-    public static List<Index> getIndexes() {
+    public List<Index> getIndexes() {
         return new ArrayList<>(indexMap.values());
     }
 

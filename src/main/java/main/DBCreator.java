@@ -18,6 +18,8 @@ public class DBCreator {
                 connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + dbName, dbUser, dbPass);
                 clearDb();
 
+                createSiteTable();
+
                 createPageTable();
                 createFieldTable();
 
@@ -25,7 +27,6 @@ public class DBCreator {
 
                 createLemmaTable();
                 createIndexTable();
-
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -45,6 +46,8 @@ public class DBCreator {
                 "path TEXT NOT NULL, " +
                 "code INT NOT NULL, " +
                 "content MEDIUMTEXT NOT NULL, " +
+                "site_id INT NOT NULL, " +
+                "FOREIGN KEY (site_id) REFERENCES site(id) ON UPDATE CASCADE ON DELETE CASCADE, " +
                 "PRIMARY KEY(id))");
         connection.createStatement().execute("CREATE INDEX page_index ON page (path(50));");
     }
@@ -70,6 +73,8 @@ public class DBCreator {
                 "id INT NOT NULL AUTO_INCREMENT, " +
                 "lemma VARCHAR(255) NOT NULL, " +
                 "frequency INT NOT NULL, " +
+                "site_id INT NOT NULL, " +
+                "FOREIGN KEY (site_id) REFERENCES site(id) ON UPDATE CASCADE ON DELETE CASCADE, " +
                 "PRIMARY KEY(id))");
     }
 
@@ -84,8 +89,19 @@ public class DBCreator {
                 "FOREIGN KEY (lemma_id) REFERENCES lemma(id) ON UPDATE CASCADE ON DELETE CASCADE)");
     }
 
+    private static void createSiteTable() throws SQLException {
+        connection.createStatement().execute("CREATE TABLE `site` (" +
+                "id INT NOT NULL AUTO_INCREMENT, " +
+                "`status` ENUM('INDEXING', 'INDEXED', 'FAILED') NOT NULL, " +
+                "status_time DATETIME NOT NULL, " +
+                "last_error TEXT, " +
+                "url VARCHAR(255) NOT NULL, " +
+                "`name` VARCHAR(255) NOT NULL, " +
+                "PRIMARY KEY(id))");
+    }
+
     private static void clearDb() throws SQLException {
-        connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page");
+        connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page, `site`");
     }
 
 

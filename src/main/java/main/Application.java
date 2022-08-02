@@ -1,22 +1,18 @@
 package main;
 
-import com.google.common.collect.Lists;
-import main.engine.Searcher;
 import main.model.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
-import main.engine.Parser;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ForkJoinPool;
 
-@Configuration
-@EnableAutoConfiguration
+/*@Configuration
+@EnableAutoConfiguration*/
+@SpringBootApplication
 public class Application {
-
 
     public static void main(String[] args) throws IOException, InterruptedException {
         ConfigurableApplicationContext context = SpringApplication.run(Application.class, args);
@@ -24,6 +20,7 @@ public class Application {
         LemmaRepository lemmaRepo = context.getBean(LemmaRepository.class);
         PageRepository pageRepo = context.getBean(PageRepository.class);
         IndexRepository indexRepo = context.getBean(IndexRepository.class);
+        SiteRepository siteRepo = context.getBean(SiteRepository.class);
 
         //test data
         String sitePath = "https://www.nikoartgallery.com/";
@@ -31,37 +28,22 @@ public class Application {
         //String sitePath = "http://www.aot.ru/";
         //String sitePath = "http://www.playback.ru/";
 
-        //createIndex(fieldRepo, indexRepo, sitePath);
-
-        Iterable<Index> siteIndexes = indexRepo.findAll();
-        Searcher searcher = new Searcher("свой жизнь", Lists.newArrayList(siteIndexes));
-
-        searcher.getSearchedPageList().forEach(System.out::println);
-
-
-        context.close();
-    }
-
-
-    /**
-     * перезаписывает БД и индексирует переданный сайт
-     */
-    private static void createIndex(
-            FieldRepository fieldRepo,
-            IndexRepository indexRepo,
-            String sitePath
-    ) {
         //only if need recreate db
-        DBCreator.initDb();
+        //DBCreator.initDb();
 
-        Parser parser = new Parser(sitePath);
-        parser.setFieldForIndex(fieldRepo.findAll());
+        //create site and put in db
+        //Site site = DBCombiner.createCurrentSite(siteRepo, sitePath, "Галерея Нико");
+        //indexing
+        //List<Index> indexList = DBCombiner.createIndex(fieldRepo, indexRepo, siteRepo, site);
 
-        ForkJoinPool pool = ForkJoinPool.commonPool();
-        pool.invoke(parser);
+        //test search
+//        Iterable<Index> siteIndexes = indexRepo.findAll();
+//        Searcher searcher = new Searcher("свой жизнь", Lists.newArrayList(siteIndexes));
+//
+//        searcher.getSearchedPageList().forEach(System.out::println);
 
-        List<Index> indexes = Parser.getIndexes();
-        indexRepo.saveAll(indexes);
+        //context.close();
     }
+
 
 }
