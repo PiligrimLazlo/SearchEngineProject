@@ -1,6 +1,7 @@
 package main.engine;
 
 import main.model.*;
+import main.utils.DBCreator;
 
 import java.util.Date;
 import java.util.List;
@@ -20,6 +21,8 @@ public class DBCombiner {
     ) {
         List<Index> indexes = null;
         try {
+            DBCreator.clearDb();
+
             Parser parser = new Parser(site.getUrl());
             parser.setFieldForIndex(fieldRepo.findAll());
 
@@ -44,7 +47,7 @@ public class DBCombiner {
         return indexes;
     }
 
-    public static Site createCurrentSite(SiteRepository siteRepo, String sitePath, String siteName) {
+/*    public static Site createCurrentSite(SiteRepository siteRepo, String sitePath, String siteName) {
         Optional<Site> siteOpt = siteRepo.findByUrl(sitePath);
         Site currentSite = siteOpt.orElseGet(Site::new);
         currentSite.setName(siteName);
@@ -54,5 +57,14 @@ public class DBCombiner {
         siteRepo.save(currentSite);
 
         return currentSite;
+    }*/
+
+    public static Site initSiteBeforeIndexing(Site ymlSite, SiteRepository siteRepo) {
+        ymlSite.setStatus(Status.INDEXING);
+        ymlSite.setStatusTime(new Date());
+        siteRepo.save(ymlSite);
+
+        return ymlSite;
     }
+
 }

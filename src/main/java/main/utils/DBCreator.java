@@ -1,4 +1,4 @@
-package main;
+package main.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -100,7 +100,7 @@ public class DBCreator {
                 "PRIMARY KEY(id))");
     }
 
-    private static void clearDb() throws SQLException {
+    public static void clearDb() throws SQLException {
         connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page, `site`");
     }
 

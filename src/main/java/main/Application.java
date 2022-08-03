@@ -1,11 +1,11 @@
 package main;
 
 import main.model.*;
+import main.utils.DBCreator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 
@@ -29,7 +29,7 @@ public class Application {
         //String sitePath = "http://www.playback.ru/";
 
         //only if need recreate db
-        //DBCreator.initDb();
+        DBCreator.initDb(); //todo rewrite logic
 
         //create site and put in db
         //Site site = DBCombiner.createCurrentSite(siteRepo, sitePath, "Галерея Нико");

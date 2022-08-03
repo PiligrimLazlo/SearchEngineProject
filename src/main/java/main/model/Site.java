@@ -1,5 +1,6 @@
 package main.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,6 +32,7 @@ public class Site {
     @Getter
     @Setter
     @Column(name = "last_error")
+    @JsonProperty("error")
     private String lastError;
 
     @Getter
