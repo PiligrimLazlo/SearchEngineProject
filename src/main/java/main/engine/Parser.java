@@ -42,6 +42,8 @@ public class Parser extends RecursiveAction {
 
     private static Iterable<Field> fieldsForIndex;//передаем снаружи, здесь не работаем с БД
 
+    private boolean isCanceled;
+
     //for main client
     //формат http://www.site.com/
     public Parser(String site) {
@@ -83,6 +85,7 @@ public class Parser extends RecursiveAction {
      */
     @Override
     protected void compute() {
+        if (isCanceled) return;
         try {
             List<Parser> subParsers = new ArrayList<>();
 
@@ -245,5 +248,14 @@ public class Parser extends RecursiveAction {
     public void setFieldForIndex(Iterable<Field> filedForIndex) {
         Parser.fieldsForIndex = filedForIndex;
     }
+
+    public void setCanceled(boolean isCanceled) {
+        this.isCanceled = isCanceled;
+    }
+
+    public boolean isCanceled() {
+        return isCanceled;
+    }
+
 
 }

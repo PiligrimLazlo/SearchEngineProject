@@ -104,5 +104,9 @@ public class DBCreator {
         connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page, `site`");
     }
 
+    public static void clearTables() throws SQLException {
+        connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page, `site`");
+    }
+
 
 }

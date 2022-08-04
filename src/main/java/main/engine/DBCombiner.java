@@ -9,6 +9,8 @@ import java.util.concurrent.ForkJoinPool;
 
 public class DBCombiner {
 
+    private Parser parser;
+
     /**
      * перезаписывает БД и индексирует переданный сайт
      */
@@ -21,7 +23,7 @@ public class DBCombiner {
         List<Index> indexes = null;
         try {
 
-            Parser parser = new Parser(site.getUrl());
+            parser = new Parser(site.getUrl());
             parser.setFieldForIndex(fieldRepo.findAll());
 
             ForkJoinPool pool = ForkJoinPool.commonPool();
@@ -63,6 +65,10 @@ public class DBCombiner {
         siteRepo.save(ymlSite);
 
         return ymlSite;
+    }
+
+    public void cancelParsing() {
+        parser.setCanceled(true);
     }
 
 }

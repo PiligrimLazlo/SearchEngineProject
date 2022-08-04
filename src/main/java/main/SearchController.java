@@ -9,6 +9,7 @@ import main.model.responses.statistics.Statistics;
 import main.model.responses.statistics.StatisticsResponse;
 import main.model.responses.statistics.TotalStatistics;
 import main.utils.ApplicationProps;
+import main.utils.DBCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,13 +51,15 @@ public class SearchController {
         if (isIndexing) return new IndexingResponse(false, "Индексация уже запущена");
         isIndexing = true;
 
-        //List<Callable<IndexingResponse>> tasks = new ArrayList<>();
+        pageRepo.deleteAll();
+        lemmaRepo.deleteAll();
+        indexRepo.deleteAll();
+        siteRepo.deleteAll();
+
         for (Site s : sites) {
             executorService.submit(() -> {
                 Site initializedSite = dbCombiner.initSiteBeforeIndexing(s, siteRepo);
                 dbCombiner.createIndex(fieldRepo, indexRepo, siteRepo, initializedSite);
-                //ошбки обрабатываются ниже в других частях кода
-                return new IndexingResponse(true, null);
             });
         }
 
@@ -71,8 +74,7 @@ public class SearchController {
         if (!isIndexing) return new IndexingResponse(false, "Индексация не запущена");
 
         //todo stop indexing
-        //executorService.shutdownNow();
-        //dbCombiner.stopIndexing();
+        dbCombiner.cancelParsing();
 
         isIndexing = false;
         return new IndexingResponse(true, null);
