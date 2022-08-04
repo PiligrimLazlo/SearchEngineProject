@@ -5,15 +5,14 @@ import main.utils.DBCreator;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 
 public class DBCombiner {
+
     /**
      * перезаписывает БД и индексирует переданный сайт
      */
-    public static List<Index> createIndex(
+    public List<Index> createIndex(
             FieldRepository fieldRepo,
             IndexRepository indexRepo,
             SiteRepository siteRepo,
@@ -21,7 +20,6 @@ public class DBCombiner {
     ) {
         List<Index> indexes = null;
         try {
-            DBCreator.clearDb();
 
             Parser parser = new Parser(site.getUrl());
             parser.setFieldForIndex(fieldRepo.findAll());
@@ -59,7 +57,7 @@ public class DBCombiner {
         return currentSite;
     }*/
 
-    public static Site initSiteBeforeIndexing(Site ymlSite, SiteRepository siteRepo) {
+    public Site initSiteBeforeIndexing(Site ymlSite, SiteRepository siteRepo) {
         ymlSite.setStatus(Status.INDEXING);
         ymlSite.setStatusTime(new Date());
         siteRepo.save(ymlSite);

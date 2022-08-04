@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -39,28 +39,28 @@ public class SearchController {
     private ApplicationProps applicationProps;
     private boolean isIndexing;
 
+    private ExecutorService executorService;
+    private DBCombiner dbCombiner;
+
     @GetMapping("/startIndexing")
-    public IndexingResponse startIndexing() {
+    public IndexingResponse startIndexing() throws InterruptedException {
         System.out.println("sifewfwegfeg");
         List<Site> sites = applicationProps.getSites();
 
         if (isIndexing) return new IndexingResponse(false, "Индексация уже запущена");
         isIndexing = true;
 
-        ExecutorService executorService = Executors.newFixedThreadPool(sites.size());
-
-        /*for (Site s: sites) {
-            //todo
+        //List<Callable<IndexingResponse>> tasks = new ArrayList<>();
+        for (Site s : sites) {
             executorService.submit(() -> {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                Site initializedSite = dbCombiner.initSiteBeforeIndexing(s, siteRepo);
+                dbCombiner.createIndex(fieldRepo, indexRepo, siteRepo, initializedSite);
+                //ошбки обрабатываются ниже в других частях кода
+                return new IndexingResponse(true, null);
             });
-        }*/
+        }
 
-        isIndexing = false;
+        //isIndexing = false;
         return new IndexingResponse(true, null);
     }
 
@@ -71,13 +71,15 @@ public class SearchController {
         if (!isIndexing) return new IndexingResponse(false, "Индексация не запущена");
 
         //todo stop indexing
+        //executorService.shutdownNow();
+        //dbCombiner.stopIndexing();
 
         isIndexing = false;
         return new IndexingResponse(true, null);
     }
 
     @PostMapping("/indexPage")
-    public IndexingResponse indexPage(@RequestParam String url) {
+    public IndexingResponse indexPage(@RequestParam String url) throws InterruptedException, ExecutionException {
         List<Site> sitesFromYml = applicationProps.getSites();
         List<Site> siteWithSpecifiedUrl =
                 sitesFromYml.stream().filter(site -> site.getUrl().equals(url)).collect(Collectors.toList());
@@ -86,32 +88,39 @@ public class SearchController {
                     "указанных в конфигурационном файле");
 
 
-        ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-
-        singleThreadExecutor.submit(() -> {
-            Site initializedSite = DBCombiner.initSiteBeforeIndexing(siteWithSpecifiedUrl.get(0), siteRepo);
-            DBCombiner.createIndex(fieldRepo, indexRepo, siteRepo, initializedSite);
+        executorService.submit(() -> {
+            Site initializedSite = dbCombiner.initSiteBeforeIndexing(siteWithSpecifiedUrl.get(0), siteRepo);
+            dbCombiner.createIndex(fieldRepo, indexRepo, siteRepo, initializedSite);
         });
 
+        //ошбки обрабатываются ниже в других частях кода
         return new IndexingResponse(true, null);
     }
 
     @GetMapping("/statistics")
     public StatisticsResponse getStatistics() {
+        //initialized here because this method run first
+        executorService = Executors.newFixedThreadPool(applicationProps.getSites().size());
+        dbCombiner = new DBCombiner();
+
         long sitesCount = siteRepo.count();
-        long pagesCount = pageRepo.count();
-        long lemmasCount = lemmaRepo.count();
 
         TotalStatistics totalStatistics =
-                new TotalStatistics(sitesCount, pagesCount, lemmasCount, isIndexing);
+                new TotalStatistics(sitesCount, pageRepo.count(), lemmaRepo.count(), isIndexing);
 
-        List<DetailedStatistics> detailedStatistics = DetailedStatistics.getDetailedStatistics(
-                Lists.newArrayList(siteRepo.findAll()), pagesCount, lemmasCount);
+        List<DetailedStatistics> detailedStatistics =
+                Lists.newArrayList(siteRepo.findAll()).stream().map(site -> new DetailedStatistics(
+                        site.getUrl(),
+                        site.getName(),
+                        site.getStatus(),
+                        site.getStatusTime().getTime(),
+                        site.getLastError(),
+                        pageRepo.countPages(site.getId()),
+                        lemmaRepo.countLemmas(site.getId())
+                )).collect(Collectors.toList());
 
         Statistics statistics = new Statistics(totalStatistics, detailedStatistics);
 
         return new StatisticsResponse(true, statistics);
     }
-
-
 }

@@ -20,7 +20,7 @@ public class DetailedStatistics {
     @JsonProperty("lemmas")
     private long lemmas;
 
-    private DetailedStatistics(
+    public DetailedStatistics(
             String url,
             String name,
             Status status,
@@ -36,18 +36,5 @@ public class DetailedStatistics {
         this.error = error;
         this.pages = pages;//count
         this.lemmas = lemmas;//count
-    }
-
-    public static List<DetailedStatistics> getDetailedStatistics(List<Site> sites, long pagesCount, long lemmasCount) {
-        return sites.stream().map(site -> new DetailedStatistics(
-                site.getUrl(),
-                site.getName(),
-                site.getStatus(),
-                site.getStatusTime().getTime(),
-                site.getLastError(),
-                pagesCount,
-                lemmasCount
-        )).collect(Collectors.toList());
-
     }
 }

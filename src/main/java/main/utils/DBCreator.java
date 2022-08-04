@@ -16,7 +16,7 @@ public class DBCreator {
         if (connection == null) {
             try {
                 connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + dbName, dbUser, dbPass);
-                clearDb();
+                dropAllTables();
 
                 createSiteTable();
 
@@ -100,7 +100,7 @@ public class DBCreator {
                 "PRIMARY KEY(id))");
     }
 
-    public static void clearDb() throws SQLException {
+    public static void dropAllTables() throws SQLException {
         connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page, `site`");
     }
 

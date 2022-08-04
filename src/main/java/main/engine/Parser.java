@@ -69,6 +69,12 @@ public class Parser extends RecursiveAction {
         this.indexMap = indexMap;
     }
 
+    public void cancelAll() {
+        /*for (Parser p: subParsers) {
+            p.cancel(true);
+        }*/
+    }
+
 
     /**
      * Рекурсивно обходит все страница сайта, пока не упирается в уже пройденную;
