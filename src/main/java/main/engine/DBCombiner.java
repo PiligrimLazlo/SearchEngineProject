@@ -3,13 +3,12 @@ package main.engine;
 import main.model.*;
 import main.utils.DBCreator;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
 public class DBCombiner {
-
-    private Parser parser;
 
     /**
      * перезаписывает БД и индексирует переданный сайт
@@ -22,8 +21,8 @@ public class DBCombiner {
     ) {
         List<Index> indexes = null;
         try {
-
-            parser = new Parser(site.getUrl());
+            Parser.setCanceled(false);
+            Parser parser = new Parser(site.getUrl());
             parser.setFieldForIndex(fieldRepo.findAll());
 
             ForkJoinPool pool = ForkJoinPool.commonPool();
@@ -31,7 +30,6 @@ public class DBCombiner {
 
             indexes = parser.getIndexes();
 
-            //TODO перенести в Parser (или нет)
             site.setStatusTime(new Date());
             site.setStatus(Status.INDEXED);
             indexes.stream().map(Index::getPage).forEach(page -> page.setSite(site));
@@ -47,18 +45,9 @@ public class DBCombiner {
         return indexes;
     }
 
-/*    public static Site createCurrentSite(SiteRepository siteRepo, String sitePath, String siteName) {
-        Optional<Site> siteOpt = siteRepo.findByUrl(sitePath);
-        Site currentSite = siteOpt.orElseGet(Site::new);
-        currentSite.setName(siteName);
-        currentSite.setStatus(Status.INDEXING);
-        currentSite.setUrl(sitePath);
-        currentSite.setStatusTime(new Date());
-        siteRepo.save(currentSite);
-
-        return currentSite;
-    }*/
-
+    /**
+     * инициализирует сайт в БД перед создание индекса. Нужно вызвать перед createIndex(~)
+     */
     public Site initSiteBeforeIndexing(Site ymlSite, SiteRepository siteRepo) {
         ymlSite.setStatus(Status.INDEXING);
         ymlSite.setStatusTime(new Date());
@@ -68,7 +57,7 @@ public class DBCombiner {
     }
 
     public void cancelParsing() {
-        parser.setCanceled(true);
+        Parser.setCanceled(true);
     }
 
 }

@@ -16,13 +16,4 @@ public class ApplicationProps {
     @Setter
     private List<Site> sites;
 
-/*    public static class YmlSite {
-        @Getter
-        @Setter
-        private String url;
-        @Getter
-        @Setter
-        private String name;
-    }*/
-
 }

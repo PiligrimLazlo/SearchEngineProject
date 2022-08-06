@@ -2,6 +2,7 @@ package main.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class DBCreator {
@@ -13,25 +14,27 @@ public class DBCreator {
     private static final String dbPass = "PasswordforMySQL.2022";
 
     public static void initDb() {
-        if (connection == null) {
-            try {
+
+        try {
+            if (connection == null) {
                 connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + dbName, dbUser, dbPass);
-                dropAllTables();
-
-                createSiteTable();
-
-                createPageTable();
-                createFieldTable();
-
-                insertInFieldInitialValues();
-
-                createLemmaTable();
-                createIndexTable();
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
+            dropAllTables();
+
+            createSiteTable();
+
+            createPageTable();
+            createFieldTable();
+
+            insertInFieldInitialValues();
+
+            createLemmaTable();
+            createIndexTable();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
+
 
     public static Connection getConnection() {
         if (connection == null) {
@@ -41,7 +44,7 @@ public class DBCreator {
     }
 
     private static void createPageTable() throws SQLException {
-        connection.createStatement().execute("CREATE TABLE page(" +
+        boolean result = connection.createStatement().execute("CREATE TABLE IF NOT EXISTS page(" +
                 "id INT NOT NULL AUTO_INCREMENT, " +
                 "path TEXT NOT NULL, " +
                 "code INT NOT NULL, " +
@@ -49,11 +52,13 @@ public class DBCreator {
                 "site_id INT NOT NULL, " +
                 "FOREIGN KEY (site_id) REFERENCES site(id) ON UPDATE CASCADE ON DELETE CASCADE, " +
                 "PRIMARY KEY(id))");
-        connection.createStatement().execute("CREATE INDEX page_index ON page (path(50));");
+        if (result)
+            connection.createStatement().execute("CREATE INDEX page_index ON page (path(50));");
     }
 
     private static void createFieldTable() throws SQLException {
-        connection.createStatement().execute("CREATE TABLE field(" +
+        connection.createStatement().execute("DROP TABLE IF EXISTS field");
+        connection.createStatement().execute("CREATE TABLE IF NOT EXISTS field(" +
                 "id INT NOT NULL AUTO_INCREMENT, " +
                 "name VARCHAR(255) NOT NULL, " +
                 "selector VARCHAR(255) NOT NULL, " +
@@ -69,7 +74,7 @@ public class DBCreator {
     }
 
     private static void createLemmaTable() throws SQLException {
-        connection.createStatement().execute("CREATE TABLE lemma(" +
+        connection.createStatement().execute("CREATE TABLE IF NOT EXISTS lemma(" +
                 "id INT NOT NULL AUTO_INCREMENT, " +
                 "lemma VARCHAR(255) NOT NULL, " +
                 "frequency INT NOT NULL, " +
@@ -79,7 +84,7 @@ public class DBCreator {
     }
 
     private static void createIndexTable() throws SQLException {
-        connection.createStatement().execute("CREATE TABLE `index`(" +
+        connection.createStatement().execute("CREATE TABLE IF NOT EXISTS `index`(" +
                 "id INT NOT NULL AUTO_INCREMENT, " +
                 "page_id INT NOT NULL, " +
                 "lemma_id INT NOT NULL, " +
@@ -90,7 +95,7 @@ public class DBCreator {
     }
 
     private static void createSiteTable() throws SQLException {
-        connection.createStatement().execute("CREATE TABLE `site` (" +
+        connection.createStatement().execute("CREATE TABLE IF NOT EXISTS `site` (" +
                 "id INT NOT NULL AUTO_INCREMENT, " +
                 "`status` ENUM('INDEXING', 'INDEXED', 'FAILED') NOT NULL, " +
                 "status_time DATETIME NOT NULL, " +
@@ -104,8 +109,16 @@ public class DBCreator {
         connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page, `site`");
     }
 
-    public static void clearTables() throws SQLException {
-        connection.createStatement().execute("DROP TABLE IF EXISTS `index`, lemma, field, page, `site`");
+    public static void removeFromPageTable(int siteId) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement("DELETE FROM `page` WHERE site_id=?");
+        statement.setInt(1, siteId);
+        statement.execute();
+    }
+
+    public static void removeFromLemmaTable(int siteId) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement("DELETE FROM `lemma` WHERE site_id=?");
+        statement.setInt(1, siteId);
+        statement.execute();
     }
 
 

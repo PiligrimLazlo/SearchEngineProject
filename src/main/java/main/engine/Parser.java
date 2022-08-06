@@ -42,7 +42,7 @@ public class Parser extends RecursiveAction {
 
     private static Iterable<Field> fieldsForIndex;//передаем снаружи, здесь не работаем с БД
 
-    private boolean isCanceled;
+    private static boolean isCanceled;
 
     //for main client
     //формат http://www.site.com/
@@ -69,12 +69,6 @@ public class Parser extends RecursiveAction {
         this.pages = pages;
         this.lemmaMap = lemmaMap;
         this.indexMap = indexMap;
-    }
-
-    public void cancelAll() {
-        /*for (Parser p: subParsers) {
-            p.cancel(true);
-        }*/
     }
 
 
@@ -249,11 +243,11 @@ public class Parser extends RecursiveAction {
         Parser.fieldsForIndex = filedForIndex;
     }
 
-    public void setCanceled(boolean isCanceled) {
-        this.isCanceled = isCanceled;
+    public static void setCanceled(boolean isCanceled) {
+        Parser.isCanceled = isCanceled;
     }
 
-    public boolean isCanceled() {
+    public static boolean isCanceled() {
         return isCanceled;
     }
 
