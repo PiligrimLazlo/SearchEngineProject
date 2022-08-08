@@ -1,4 +1,4 @@
-package main.model;
+package main.entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "site")

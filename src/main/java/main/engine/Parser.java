@@ -1,10 +1,10 @@
 package main.engine;
 
 import lombok.extern.log4j.Log4j2;
-import main.model.Field;
-import main.model.Index;
-import main.model.Lemma;
-import main.model.Page;
+import main.entities.Field;
+import main.entities.Index;
+import main.entities.Lemma;
+import main.entities.Page;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;

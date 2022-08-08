@@ -12,8 +12,10 @@ sites:
   - url: https://www.nikoartgallery.com/
     name: Галерея и креативное пространство Нико
   - url: http://www.playback.ru/
-    name: Интернет магазин PlayBack.ru
+    name: Сайт мобильных устройств
   - url: http://www.aot.ru/
     name: Автоматическая обработка текста
+  - url: testUrl
+    name: testName
   #user-agent: AdvancedSearchBot
   #web-interface-path: /admin

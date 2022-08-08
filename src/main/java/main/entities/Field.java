@@ -1,7 +1,5 @@
-package main.model;
+package main.entities;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 

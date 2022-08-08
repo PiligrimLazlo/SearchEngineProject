@@ -1,14 +1,17 @@
 package main.engine;
 
-import main.model.*;
-import main.utils.DBCreator;
+import main.entities.Index;
+import main.entities.Site;
+import main.entities.Status;
+import main.repositories.FieldRepository;
+import main.repositories.IndexRepository;
+import main.repositories.SiteRepository;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
-public class DBCombiner {
+public class IndexDBCombiner {
 
     /**
      * перезаписывает БД и индексирует переданный сайт

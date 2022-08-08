@@ -1,28 +1,28 @@
-package main;
+package main.services;
 
 import com.google.common.collect.Lists;
-import main.engine.DBCombiner;
-import main.model.*;
-import main.model.responses.IndexingResponse;
-import main.model.responses.statistics.DetailedStatistics;
-import main.model.responses.statistics.Statistics;
-import main.model.responses.statistics.StatisticsResponse;
-import main.model.responses.statistics.TotalStatistics;
+import main.engine.IndexDBCombiner;
+import main.entities.Site;
+import main.entities.Status;
+import main.entities.responses.IndexResponse;
+import main.entities.responses.statistics.DetailedStatistics;
+import main.entities.responses.statistics.Statistics;
+import main.entities.responses.statistics.StatisticsResponse;
+import main.entities.responses.statistics.TotalStatistics;
+import main.repositories.*;
 import main.utils.ApplicationProps;
 import main.utils.DBCreator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-@RestController
-public class SearchController {
+@Service
+public class IndexServiceImpl implements IndexService {
 
     @Autowired
     private FieldRepository fieldRepo;
@@ -40,70 +40,59 @@ public class SearchController {
 
     private boolean isIndexingAll;
     private ExecutorService executorService;
-    private DBCombiner dbCombiner;
+    private IndexDBCombiner indexDbCombiner;
 
-    @GetMapping("/startIndexing")
-    public IndexingResponse startIndexing() throws InterruptedException, SQLException {
+
+    @Override
+    public IndexResponse startIndexing() {
         List<Site> sites = applicationProps.getSites();
 
-        if (isIndexingAll) return new IndexingResponse(false, "Индексация уже запущена");
+        if (isIndexingAll) return new IndexResponse(false, "Индексация уже запущена");
         isIndexingAll = true;
-
-        //dbCombiner.cancelParsing();
-        //DBCreator.initDb();
 
         for (Site s : sites) {
             if (s.getStatus() == Status.INDEXING) continue;
             startIndexingSite(s);
         }
 
-        //isIndexing = false;
-        return new IndexingResponse(true, null);
+        return new IndexResponse(true);
     }
 
-    @GetMapping("/stopIndexing")
-    public IndexingResponse stopIndexing() {
-        if (!isIndexingAll) return new IndexingResponse(false, "Индексация не запущена");
-        dbCombiner.cancelParsing();
+    @Override
+    public IndexResponse stopIndexing() {
+        if (!isIndexingAll) return new IndexResponse(false, "Индексация не запущена");
+        indexDbCombiner.cancelParsing();
         isIndexingAll = false;
-        return new IndexingResponse(true, null);
+        return new IndexResponse(true);
     }
 
-    @PostMapping("/indexPage")
-    public IndexingResponse indexPage(@RequestParam String url) throws InterruptedException, ExecutionException, SQLException {
+    @Override
+    public IndexResponse indexPage(String url) {
+        if (url.isBlank())
+            return new IndexResponse(false, "Задан пустой запрос");
         List<Site> sitesFromYml = applicationProps.getSites();
         List<Site> siteWithSpecifiedUrl =
                 sitesFromYml.stream().filter(site -> site.getUrl().equals(url)).collect(Collectors.toList());
         if (siteWithSpecifiedUrl.isEmpty())
-            return new IndexingResponse(false, "Данная страница находится за пределами сайтов, " +
+            return new IndexResponse(false, "Данная страница находится за пределами сайтов, " +
                     "указанных в конфигурационном файле");
 
         Site currentSite = siteWithSpecifiedUrl.get(0);
         if (currentSite.getStatus() == Status.INDEXING) {
-            return new IndexingResponse(false, "Указанный сайт уже индексируется");
+            return new IndexResponse(false, "Указанный сайт уже индексируется");
         }
 
         startIndexingSite(currentSite);
 
         //ошбки обрабатываются ниже в других частях кода
-        return new IndexingResponse(true, null);
+        return new IndexResponse(true);
     }
 
-    private void startIndexingSite(Site currentSite) throws SQLException {
-        DBCreator.removeFromPageTable(currentSite.getId());
-        DBCreator.removeFromLemmaTable(currentSite.getId());
-
-        executorService.submit(() -> {
-            Site initializedSite = dbCombiner.initSiteBeforeIndexing(currentSite, siteRepo);
-            dbCombiner.createIndex(fieldRepo, indexRepo, siteRepo, initializedSite);
-        });
-    }
-
-    @GetMapping("/statistics")
+    @Override
     public StatisticsResponse getStatistics() {
         //initialized here because this method run first
         executorService = Executors.newFixedThreadPool(applicationProps.getSites().size());
-        dbCombiner = new DBCombiner();
+        indexDbCombiner = new IndexDBCombiner();
 
         long sitesCount = siteRepo.count();
 
@@ -124,5 +113,19 @@ public class SearchController {
         Statistics statistics = new Statistics(totalStatistics, detailedStatistics);
 
         return new StatisticsResponse(true, statistics);
+    }
+
+    private void startIndexingSite(Site currentSite) {
+        try {
+            DBCreator.removeFromPageTable(currentSite.getId());
+            DBCreator.removeFromLemmaTable(currentSite.getId());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        executorService.submit(() -> {
+            Site initializedSite = indexDbCombiner.initSiteBeforeIndexing(currentSite, siteRepo);
+            indexDbCombiner.createIndex(fieldRepo, indexRepo, siteRepo, initializedSite);
+        });
     }
 }

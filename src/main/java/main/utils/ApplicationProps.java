@@ -2,7 +2,7 @@ package main.utils;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.model.Site;
+import main.entities.Site;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 

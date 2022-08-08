@@ -1,9 +1,9 @@
 package main.engine;
 
-import main.model.Index;
-import main.model.Lemma;
-import main.model.Page;
-import main.model.SearchedPage;
+import main.entities.Index;
+import main.entities.Lemma;
+import main.entities.Page;
+import main.entities.SearchedPage;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -135,7 +135,7 @@ public class Searcher {
      * В качестве фрагментов приняты корневые элементы страницы (без дочерних, сущность Element из Jsoup)
      * Для каждого такого Element мы извлекаем все леммы и далее находим пересечения с леммами из поискового запроса.
      * При совпадении обрамляем в исходной строке (полученной путем вызова Element.toString()) слово тегами b
-     * Возвращаем строку равную исходному Element с леммами, выделенными жирным и многоточием в начале и конце
+     * Возвращаем строку равную исходному Element с леммами, выделенными жирным
      */
     private String getSnippetsForCurrentPage(Page currentPage) {
         Lemmatizer lemmatizer = null;
@@ -180,7 +180,7 @@ public class Searcher {
                 }
             }
             if (!startElementString.equals(result)) {
-                snippets.append("...").append(result).append("...\n");
+                snippets.append(result);
             }
         }
 

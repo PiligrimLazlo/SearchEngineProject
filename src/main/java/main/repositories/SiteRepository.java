@@ -1,5 +1,6 @@
-package main.model;
+package main.repositories;
 
+import main.entities.Site;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;

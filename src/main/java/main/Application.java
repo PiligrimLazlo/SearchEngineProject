@@ -1,13 +1,16 @@
 package main;
 
-import main.model.*;
+import com.google.common.collect.Lists;
+import main.engine.Searcher;
+import main.entities.Index;
+import main.repositories.*;
 import main.utils.DBCreator;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
+import java.util.List;
 
 /*@Configuration
 @EnableAutoConfiguration*/
@@ -24,25 +27,21 @@ public class Application {
 
         //test data
         String sitePath = "https://www.nikoartgallery.com/";
-        //String sitePath = "https://www.lutherancathedral.ru/";
-        //String sitePath = "http://www.aot.ru/";
-        //String sitePath = "http://www.playback.ru/";
 
-        //only if need recreate db
-        DBCreator.initDb(); //todo rewrite logic
+        //if need recreate db
+        DBCreator.initDb();
 
-        //create site and put in db
-        //Site site = DBCombiner.createCurrentSite(siteRepo, sitePath, "Галерея Нико");
-        //indexing
-        //List<Index> indexList = DBCombiner.createIndex(fieldRepo, indexRepo, siteRepo, site);
+        /*//create site and put in db
+        Site site = DBCombiner.createCurrentSite(siteRepo, sitePath, "Галерея Нико");
+        indexing
+        List<Index> indexList = DBCombiner.createIndex(fieldRepo, indexRepo, siteRepo, site);
 
         //test search
-//        Iterable<Index> siteIndexes = indexRepo.findAll();
-//        Searcher searcher = new Searcher("свой жизнь", Lists.newArrayList(siteIndexes));
-//
-//        searcher.getSearchedPageList().forEach(System.out::println);
+        Iterable<Index> siteIndexes = indexRepo.findAll();
+        Searcher searcher = new Searcher("свой жизнь", Lists.newArrayList(siteIndexes));
 
-        //context.close();
+        searcher.getSearchedPageList().forEach(System.out::println);
+        context.close();*/
     }
 
 

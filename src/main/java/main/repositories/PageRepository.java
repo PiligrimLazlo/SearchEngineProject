@@ -1,12 +1,10 @@
-package main.model;
+package main.repositories;
 
 
+import main.entities.Page;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface PageRepository extends CrudRepository<Page, Integer> {
 

@@ -1,4 +1,4 @@
-package main.model.responses.statistics;
+package main.entities.responses.statistics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

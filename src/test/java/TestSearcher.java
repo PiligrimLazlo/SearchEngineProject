@@ -1,9 +1,7 @@
-import main.engine.Lemmatizer;
 import main.engine.Searcher;
-import main.model.Index;
-import main.model.Lemma;
-import main.model.Page;
-import org.junit.Assert;
+import main.entities.Index;
+import main.entities.Lemma;
+import main.entities.Page;
 import org.junit.Before;
 import org.junit.Test;
 
