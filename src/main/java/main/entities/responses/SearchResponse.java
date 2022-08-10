@@ -11,9 +11,9 @@ public class SearchResponse {
     private final boolean result;
     private final int count;
     private final String error;
-    private final List<FoundPage> data;
+    private final List<SearchedPage> data;
 
-    public SearchResponse(boolean result, int count, List<FoundPage> data) {
+    public SearchResponse(boolean result, int count, List<SearchedPage> data) {
         this.result = result;
         this.count = count;
         this.error = null;

@@ -4,6 +4,8 @@ import main.entities.Index;
 import main.entities.Lemma;
 import main.entities.Page;
 import main.entities.SearchedPage;
+import main.repositories.LemmaRepository;
+import main.repositories.SiteRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,14 +20,15 @@ public class Searcher {
     private List<SearchedPage> searchedPageList;
     private String textToSearch;
 
-    public Searcher(String textToSearch, List<Index> indexes) throws IOException {
+    public Searcher(String textToSearch, LemmaRepository lemmaRepo, int siteId) throws IOException {
         this.textToSearch = textToSearch;
-        List<Lemma> intersectedLemmas = getIntersectionOfSearchAndSiteLemmas(textToSearch, indexes);
+        List<Lemma> intersectedLemmas = getIntersectionOfSearchAndSiteLemmas(textToSearch, lemmaRepo, siteId);
 
         List<Page> foundPages = getPagesContainingIntersectedLemmas(intersectedLemmas);
-        if (foundPages.isEmpty()) return;
-
-        searchedPageList = createSearchedPageList(foundPages);
+        if (foundPages.isEmpty())
+            searchedPageList = new ArrayList<>();
+        else
+            searchedPageList = createSearchedPageList(foundPages);
     }
 
     public List<SearchedPage> getSearchedPageList() {
@@ -40,14 +43,11 @@ public class Searcher {
      * Сортируем леммы в порядке увеличения частоты встречаемости (по возрастанию значения поля frequency)
      * — от самых редких до самых частых.
      */
-    public List<Lemma> getIntersectionOfSearchAndSiteLemmas(String textToSearch, List<Index> indexes) throws IOException {
-        Set<String> searchLemmas = Lemmatizer.getInstance().getLemmaSet(textToSearch);
+    private List<Lemma> getIntersectionOfSearchAndSiteLemmas(
+            String textToSearch, LemmaRepository lemmaRepo, int siteId) throws IOException {
 
-        return indexes.stream().map(index -> index.getLemma())
-                .distinct()
-                .filter(siteLemma -> searchLemmas.contains(siteLemma.getLemma()) && siteLemma.getFrequency() < 100)
-                .sorted((l1, l2) -> Integer.compare(l1.getFrequency(), l2.getFrequency()))
-                .collect(Collectors.toList());
+        Set<String> searchLemmas = Lemmatizer.getInstance().getLemmaSet(textToSearch);
+        return lemmaRepo.selectIntersectionOfSearchAndSiteLemmasFromDb(siteId, searchLemmas.toArray(new String[0]));
     }
 
 
@@ -57,7 +57,7 @@ public class Searcher {
      * Список страниц при этом на каждой итерации уменьшается.
      * Если в итоге не осталось ни одной страницы, выводим пустой список.
      */
-    public List<Page> getPagesContainingIntersectedLemmas(List<Lemma> intersectedLemmas) {
+    private List<Page> getPagesContainingIntersectedLemmas(List<Lemma> intersectedLemmas) {
         List<Page> foundPages = new ArrayList<>();
 
 
@@ -101,7 +101,7 @@ public class Searcher {
      * сумму всех rank всех найденных на странице лемм (из таблицы index),
      * которую делим на максимальное значение этой абсолютной релевантности для всех найденных страниц.
      */
-    public List<SearchedPage> createSearchedPageList(List<Page> foundPages) {
+    private List<SearchedPage> createSearchedPageList(List<Page> foundPages) {
         List<SearchedPage> searchedPageList = new ArrayList<>();
 
         double[] pagesRelevance = new double[foundPages.size()];
@@ -118,10 +118,19 @@ public class Searcher {
         for (int i = 0; i < pagesRelevance.length; i++) {
             Page p = foundPages.get(i);
             SearchedPage searchedPage = new SearchedPage();
-            searchedPage.setUri(p.getPath());
-            searchedPage.setTitle(p.getContent().substring(p.getContent().indexOf("<title>") + 7, p.getContent().indexOf("</title>")));
-            searchedPage.setSnippet(getSnippetsForCurrentPage(p));
+            searchedPage.setUri(p.getPath());//p.getPath().substring(0, p.getPath().lastIndexOf("/"))
+
+            int start = p.getContent().indexOf("<title>") + 7;
+            int end = p.getContent().indexOf("</title>");
+            if (start == -1 + 7 || end == -1)
+                searchedPage.setTitle("-");
+            else
+                searchedPage.setTitle(p.getContent().substring(start, end));
+
+            searchedPage.setSnippet(getSnippetsForCurrentPage(p, textToSearch));
             searchedPage.setRelevance(pagesRelevance[i] / maxAbsRelevance);
+            searchedPage.setSite(p.getSite().getUrl().substring(0, p.getSite().getUrl().lastIndexOf("/")));
+            searchedPage.setSiteName(p.getSite().getName());
             searchedPageList.add(searchedPage);
         }
 
@@ -137,7 +146,7 @@ public class Searcher {
      * При совпадении обрамляем в исходной строке (полученной путем вызова Element.toString()) слово тегами b
      * Возвращаем строку равную исходному Element с леммами, выделенными жирным
      */
-    private String getSnippetsForCurrentPage(Page currentPage) {
+    private String getSnippetsForCurrentPage(Page currentPage, String text) {
         Lemmatizer lemmatizer = null;
         try {
             lemmatizer = Lemmatizer.getInstance();
@@ -145,7 +154,7 @@ public class Searcher {
             throw new RuntimeException(e);
         }
 
-        Set<String> lemmaSet = lemmatizer.getLemmaSet(textToSearch);
+        Set<String> lemmaSet = lemmatizer.getLemmaSet(text);
         Document doc = Jsoup.parse(currentPage.getContent());
 
         List<Element> elements = new ArrayList<>();
@@ -182,6 +191,14 @@ public class Searcher {
             if (!startElementString.equals(result)) {
                 snippets.append(result);
             }
+        }
+
+        if (snippets.toString().equals("")) {
+            Element body = doc.body();
+            String cleanBody = Jsoup.clean(body.toString(), Safelist.none());
+            //todo заменять все слова на жирные  cleanBody.replaceAll()
+            //todo находить первое и последнее включение искомых лемм, брать +- 50 символов
+            snippets.append(cleanBody);
         }
 
         return snippets.toString();

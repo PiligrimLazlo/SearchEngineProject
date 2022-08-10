@@ -52,8 +52,7 @@ public class DBCreator {
                 "site_id INT NOT NULL, " +
                 "FOREIGN KEY (site_id) REFERENCES site(id) ON UPDATE CASCADE ON DELETE CASCADE, " +
                 "PRIMARY KEY(id))");
-        if (result)
-            connection.createStatement().execute("CREATE INDEX page_index ON page (path(50));");
+        connection.createStatement().execute("CREATE INDEX page_index ON page (path(50));");
     }
 
     private static void createFieldTable() throws SQLException {
@@ -74,13 +73,14 @@ public class DBCreator {
     }
 
     private static void createLemmaTable() throws SQLException {
-        connection.createStatement().execute("CREATE TABLE IF NOT EXISTS lemma(" +
+        boolean result = connection.createStatement().execute("CREATE TABLE IF NOT EXISTS lemma(" +
                 "id INT NOT NULL AUTO_INCREMENT, " +
                 "lemma VARCHAR(255) NOT NULL, " +
                 "frequency INT NOT NULL, " +
                 "site_id INT NOT NULL, " +
                 "FOREIGN KEY (site_id) REFERENCES site(id) ON UPDATE CASCADE ON DELETE CASCADE, " +
                 "PRIMARY KEY(id))");
+        connection.createStatement().execute("CREATE INDEX lemma_index ON lemma (lemma(50));");
     }
 
     private static void createIndexTable() throws SQLException {

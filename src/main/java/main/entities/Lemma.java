@@ -27,7 +27,7 @@ public class Lemma {
     private int frequency;
 
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "lemma")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "lemma")
     @Column(nullable = false)
     @Getter
     @Setter

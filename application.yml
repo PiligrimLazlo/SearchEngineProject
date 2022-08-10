@@ -15,7 +15,7 @@ sites:
     name: Сайт мобильных устройств
   - url: http://www.aot.ru/
     name: Автоматическая обработка текста
-  - url: testUrl
-    name: testName
+  #- url: testUrl
+  #  name: testName
   #user-agent: AdvancedSearchBot
   #web-interface-path: /admin

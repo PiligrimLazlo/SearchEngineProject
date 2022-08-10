@@ -31,7 +31,7 @@ public class Page {
     @Column(nullable = false)
     private String content;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "page")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "page")
     @Column(nullable = false)
     @Getter
     @Setter

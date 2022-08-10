@@ -1,8 +1,10 @@
 package main;
 
 import com.google.common.collect.Lists;
+import main.engine.Lemmatizer;
 import main.engine.Searcher;
 import main.entities.Index;
+import main.entities.Lemma;
 import main.repositories.*;
 import main.utils.DBCreator;
 import org.springframework.boot.SpringApplication;
@@ -11,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 /*@Configuration
 @EnableAutoConfiguration*/
@@ -40,7 +43,14 @@ public class Application {
         Iterable<Index> siteIndexes = indexRepo.findAll();
         Searcher searcher = new Searcher("свой жизнь", Lists.newArrayList(siteIndexes));
 
-        searcher.getSearchedPageList().forEach(System.out::println);
+        searcher.getSearchedPageList().forEach(System.out::println);*/
+
+
+        /*Set<String> searchLemmas = Lemmatizer.getInstance().getLemmaSet("свой жизнь");
+        List<Lemma> lemmaList = lemmaRepo.selectIntersectionOfSearchAndSiteLemmasFromDb(searchLemmas.toArray(new String[0]));
+        System.out.println(lemmaList.size());
+        lemmaList.forEach(lemma -> System.out.println(lemma.getLemma() + " " + lemma.getFrequency()));
+
         context.close();*/
     }
 
