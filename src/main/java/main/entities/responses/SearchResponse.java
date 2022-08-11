@@ -15,9 +15,9 @@ public class SearchResponse {
 
     public SearchResponse(boolean result, int count, List<SearchedPage> data) {
         this.result = result;
-        this.count = count;
         this.error = null;
         this.data = data;
+        this.count = count;
     }
 
     public SearchResponse(boolean result, String error) {

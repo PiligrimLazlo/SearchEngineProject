@@ -1,11 +1,10 @@
 package main.engine;
 
-import main.entities.Index;
+import lombok.SneakyThrows;
 import main.entities.Lemma;
 import main.entities.Page;
 import main.entities.SearchedPage;
 import main.repositories.LemmaRepository;
-import main.repositories.SiteRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -39,7 +38,7 @@ public class Searcher {
     /**
      * Разбиваем поисковый запрос на отдельные слова.
      * Формируем из этих слов список уникальных лемм. Исключаем из списка слов междометия, союзы, предлоги и частицы.
-     * Исключаем леммы, которые встречаются большом количестве страниц (> 100).
+     * Исключаем леммы, которые встречаются большом количестве страниц (> 80).
      * Сортируем леммы в порядке увеличения частоты встречаемости (по возрастанию значения поля frequency)
      * — от самых редких до самых частых.
      */
@@ -89,7 +88,6 @@ public class Searcher {
                 count++;
             }
         }
-
         return foundPages;
     }
 
@@ -161,13 +159,17 @@ public class Searcher {
         doc.forEach(element -> {
             if (element.childrenSize() == 0) {
                 elements.add(element);
+            } else if (element.childrenSize() > 0
+                    && element.toString().length() > 500
+                    && element.toString().length() < 2000) {
+                elements.add(element);
             }
         });
 
         StringBuilder snippets = new StringBuilder();
         for (Element element : elements) {
-            String startElementString = element.toString();
-            String result = element.toString();
+            String startElementString = Jsoup.clean(element.toString(), Safelist.basic());
+            String result = startElementString;
             String cleanElement = Jsoup.clean(element.toString(), Safelist.none());
 
             if (cleanElement.isBlank()) continue;
@@ -185,22 +187,13 @@ public class Searcher {
                 }
 
                 if (lemmaSet.contains(curLemma)) {
-                    result = result.replaceAll(w, "<b>" + w + "</b>");
+                    result = result.replaceAll("[^А-Яа-я]" + w + "[^А-Яа-я]", "<b> " + w + " </b>");
                 }
             }
             if (!startElementString.equals(result)) {
                 snippets.append(result);
             }
         }
-
-        if (snippets.toString().equals("")) {
-            Element body = doc.body();
-            String cleanBody = Jsoup.clean(body.toString(), Safelist.none());
-            //todo заменять все слова на жирные  cleanBody.replaceAll()
-            //todo находить первое и последнее включение искомых лемм, брать +- 50 символов
-            snippets.append(cleanBody);
-        }
-
         return snippets.toString();
     }
 

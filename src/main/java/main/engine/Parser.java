@@ -14,6 +14,8 @@ import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
 import org.springframework.data.util.Pair;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -250,6 +252,5 @@ public class Parser extends RecursiveAction {
     public static boolean isCanceled() {
         return isCanceled;
     }
-
 
 }

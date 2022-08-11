@@ -28,19 +28,30 @@ public class SearchServiceImpl implements SearchService {
     private PageRepository pageRepo;
     @Autowired
     private SiteRepository siteRepo;
+    @Autowired
+    private IndexRepository indexRepo;
+
 
     @Autowired
     private ApplicationProps applicationProps;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private List<SearchedPage> searchedPages;
+    private String query = "";
 
 
     @SneakyThrows
     @Override
     public SearchResponse search(String query, String sitePath, int offset, int limit) {
-        List<SearchedPage> searchedPages = new ArrayList<>();
         if (query.isBlank())
             return new SearchResponse(false, "Задан пустой поисковый запрос");
+
+        if (this.query != null && this.query.equals(query) && searchedPages != null) {
+            return new SearchResponse(true, searchedPages.size(),
+                    searchedPages.subList(offset, Math.min(searchedPages.size(), offset + limit)));
+        }
+
+        searchedPages = new ArrayList<>();
+        this.query = query;
 
         //если sitePath == null => задан поиск по всем сайтам
         if (sitePath != null) {
@@ -64,9 +75,9 @@ public class SearchServiceImpl implements SearchService {
                 searchedPages.addAll(new Searcher(query, lemmaRepo, s.getId()).getSearchedPageList());
             }
         }
-        if (searchedPages.isEmpty())
-            return new SearchResponse(false, "Ничего не найдено");
-        return new SearchResponse(true, searchedPages.size(), searchedPages);
-
+/*        if (searchedPages.isEmpty())
+            return new SearchResponse(false, "Ничего не найдено");*/
+        return new SearchResponse(true, searchedPages.size(),
+                searchedPages.subList(offset, Math.min(searchedPages.size(), offset + limit)));
     }
 }

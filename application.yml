@@ -13,8 +13,8 @@ sites:
     name: Галерея и креативное пространство Нико
   - url: http://www.playback.ru/
     name: Сайт мобильных устройств
-  - url: http://www.aot.ru/
-    name: Автоматическая обработка текста
+  - url: https://volochek.life/
+    name: Вышний Волочек
   #- url: testUrl
   #  name: testName
   #user-agent: AdvancedSearchBot

@@ -13,13 +13,7 @@ public interface LemmaRepository extends CrudRepository<Lemma, Integer> {
     long countLemmas(@Param("site_id") int siteId);
 
 
-    @Query(value = "SELECT * FROM lemma WHERE lemma IN :searched_lemmas AND frequency < 20 ORDER BY frequency",
-            nativeQuery = true)
-    List<Lemma> selectIntersectionOfSearchAndSiteLemmasFromDb
-            (@Param("searched_lemmas") String... searchedLemmas);
-
-
-    @Query(value = "SELECT * FROM lemma WHERE lemma IN :searched_lemmas AND frequency < 100 AND site_id=:site_id ORDER BY frequency",
+    @Query(value = "SELECT * FROM lemma WHERE lemma IN :searched_lemmas AND frequency < 80 AND site_id=:site_id ORDER BY frequency",
             nativeQuery = true)
     List<Lemma> selectIntersectionOfSearchAndSiteLemmasFromDb
             (@Param("site_id") int siteId, @Param("searched_lemmas") String... searchedLemmas);
