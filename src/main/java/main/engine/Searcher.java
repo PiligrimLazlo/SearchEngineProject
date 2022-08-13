@@ -44,9 +44,12 @@ public class Searcher {
      */
     private List<Lemma> getIntersectionOfSearchAndSiteLemmas(
             String textToSearch, LemmaRepository lemmaRepo, int siteId) throws IOException {
-
+        long startTime = System.currentTimeMillis();
         Set<String> searchLemmas = Lemmatizer.getInstance().getLemmaSet(textToSearch);
-        return lemmaRepo.selectIntersectionOfSearchAndSiteLemmasFromDb(siteId, searchLemmas.toArray(new String[0]));
+
+        List<Lemma> lemmas = lemmaRepo.selectIntersectionOfSearchAndSiteLemmasFromDb(siteId, searchLemmas.toArray(new String[0]));
+        System.out.println("Время работы getIntersectionOfSearchAndSiteLemmas(): " + (System.currentTimeMillis() - startTime));
+        return lemmas;
     }
 
 
@@ -57,6 +60,7 @@ public class Searcher {
      * Если в итоге не осталось ни одной страницы, выводим пустой список.
      */
     private List<Page> getPagesContainingIntersectedLemmas(List<Lemma> intersectedLemmas) {
+        long startTime = System.currentTimeMillis();
         List<Page> foundPages = new ArrayList<>();
 
 
@@ -88,6 +92,7 @@ public class Searcher {
                 count++;
             }
         }
+        System.out.println("Время работы getPagesContainingIntersectedLemmas(): " + (System.currentTimeMillis() - startTime));
         return foundPages;
     }
 
@@ -100,6 +105,7 @@ public class Searcher {
      * которую делим на максимальное значение этой абсолютной релевантности для всех найденных страниц.
      */
     private List<SearchedPage> createSearchedPageList(List<Page> foundPages) {
+        long startTime = System.currentTimeMillis();
         List<SearchedPage> searchedPageList = new ArrayList<>();
 
         double[] pagesRelevance = new double[foundPages.size()];
@@ -125,7 +131,7 @@ public class Searcher {
             else
                 searchedPage.setTitle(p.getContent().substring(start, end));
 
-            searchedPage.setSnippet(getSnippetsForCurrentPage(p, textToSearch));
+            searchedPage.setSnippet(getSnippetsForCurrentPage(p, textToSearch));/**/
             searchedPage.setRelevance(pagesRelevance[i] / maxAbsRelevance);
             searchedPage.setSite(p.getSite().getUrl().substring(0, p.getSite().getUrl().lastIndexOf("/")));
             searchedPage.setSiteName(p.getSite().getName());
@@ -133,7 +139,7 @@ public class Searcher {
         }
 
         searchedPageList.sort(Comparator.comparingDouble(SearchedPage::getRelevance));
-
+        System.out.println("Время работы createSearchedPageList(): " + (System.currentTimeMillis() - startTime));
         return searchedPageList;
     }
 
@@ -144,6 +150,7 @@ public class Searcher {
      * При совпадении обрамляем в исходной строке (полученной путем вызова Element.toString()) слово тегами b
      * Возвращаем строку равную исходному Element с леммами, выделенными жирным
      */
+    //v.1 very slow
     private String getSnippetsForCurrentPage(Page currentPage, String text) {
         Lemmatizer lemmatizer = null;
         try {
@@ -196,6 +203,41 @@ public class Searcher {
         }
         return snippets.toString();
     }
+    //v.2 little faster, but too slow yet
+/*    private String getSnippetsForCurrentPage(Page currentPage, String text) {
+        Lemmatizer lemmatizer = null;
+        try {
+            lemmatizer = Lemmatizer.getInstance();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Set<String> lemmaSet = lemmatizer.getLemmaSet(text);
+        String doc = Jsoup.clean(currentPage.getContent(), Safelist.simpleText());
+        String result = "";
+
+        String[] words = russianWordArrayFromString(doc);
+
+        int indexFirst = 0;
+        int indexLast = 0;
+        for (int i = 0; i < words.length; i++) {
+            Optional<String> curLemmaOpt = lemmatizer.getLemmaSet(words[i]).stream().findFirst();
+            String curLemma;
+            if (curLemmaOpt.isPresent()) curLemma = curLemmaOpt.get();
+            else continue;
+
+            if (lemmaSet.contains(curLemma)) {
+                result = doc.replaceAll("[^А-Яа-я]" + words[i] + "[^А-Яа-я]", "<b> " + words[i] + " </b>");
+                if (indexFirst == 0) indexFirst = doc.indexOf(words[i]);
+                indexLast = doc.lastIndexOf(words[i]);
+            }
+        }
+        if (indexFirst - 30 > 0) indexFirst -= 30;
+        if (indexLast + 30   < doc.length() - 1) indexLast += 30;
+
+        return "..." + result.substring(indexFirst, indexLast) + "...";
+    }*/
+
 
     private String[] russianWordArrayFromString(String text) {
         return text.replaceAll("([^а-яА-Я\\s])", " ")

@@ -23,7 +23,7 @@ public class Application {
     public static void main(String[] args) throws IOException, InterruptedException {
         ConfigurableApplicationContext context = SpringApplication.run(Application.class, args);
         //if need recreate db
-        DBCreator.initDb();
+        //DBCreator.initDb();
     }
 
 
