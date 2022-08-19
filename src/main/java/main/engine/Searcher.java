@@ -175,7 +175,7 @@ public class Searcher {
 
         StringBuilder snippets = new StringBuilder();
         for (Element element : elements) {
-            String startElementString = Jsoup.clean(element.toString(), Safelist.basic());
+            String startElementString = Jsoup.clean(element.toString(), Safelist.none());
             String result = startElementString;
             String cleanElement = Jsoup.clean(element.toString(), Safelist.none());
 
@@ -198,7 +198,7 @@ public class Searcher {
                 }
             }
             if (!startElementString.equals(result)) {
-                snippets.append(result);
+                snippets.append(result).append("\n");
             }
         }
         return snippets.toString();

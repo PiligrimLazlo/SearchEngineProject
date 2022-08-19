@@ -13,10 +13,13 @@ public class Lemmatizer {
     private final LuceneMorphology luceneMorphology;
     private static final String WORD_TYPE_REGEX = "\\W\\w&&[^а-яА-Я\\s]";
     private static final String[] particlesNames = new String[]{"МЕЖД", "ПРЕДЛ", "СОЮЗ"};
+    private static Lemmatizer lemmatizer;
 
     public static Lemmatizer getInstance() throws IOException {
-        LuceneMorphology morphology = new RussianLuceneMorphology();
-        return new Lemmatizer(morphology);
+        if (lemmatizer == null) {
+            lemmatizer =  new Lemmatizer(new RussianLuceneMorphology());
+        }
+        return lemmatizer;
     }
 
     private Lemmatizer(LuceneMorphology luceneMorphology) {
