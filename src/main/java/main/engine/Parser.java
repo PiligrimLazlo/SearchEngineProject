@@ -14,8 +14,6 @@ import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
 import org.springframework.data.util.Pair;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +33,7 @@ public class Parser extends RecursiveAction {
     private String parentDomain;
 
     /**
-     * Структуры хранения данных java. В единственном экземпляре для всех потоков.
+     * Структуры хранения данных java. В единственном экземпляре для каждого сайта.
      * Далее {@link #indexMap} отдается наружу для заполнения БД.
      */
     private final Map<String, Page> pages;
@@ -45,6 +43,8 @@ public class Parser extends RecursiveAction {
     private static Iterable<Field> fieldsForIndex;//передаем снаружи, здесь не работаем с БД
 
     private static boolean isCanceled;
+    private static final Map<String, Integer> pagesCount = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> lemmasCount = new ConcurrentHashMap<>();
 
     //for main client
     //формат http://www.site.com/
@@ -91,6 +91,7 @@ public class Parser extends RecursiveAction {
 
             Page curPage = putPageInMap(connection);
             if (curPage == null) return;
+            countPages();
 
             Document doc = connection.get();
 
@@ -189,7 +190,8 @@ public class Parser extends RecursiveAction {
                         lemmaEntity.setFrequency(existsFrequency + 1);
                     }
                     lemmaMapForCurrentThread.put(lemmaEntity, amount);
-                    lemmaMap.put(foundLemma, lemmaEntity);
+                    Lemma put = lemmaMap.put(foundLemma, lemmaEntity);
+                    if (put == null) countLemmas();
                 });
             }
             return lemmaMapForCurrentThread;
@@ -249,8 +251,27 @@ public class Parser extends RecursiveAction {
         Parser.isCanceled = isCanceled;
     }
 
-    public static boolean isCanceled() {
-        return isCanceled;
+    private void countPages() {
+        if (pagesCount.containsKey(parentDomain)) {
+            pagesCount.put(parentDomain, pagesCount.get(parentDomain) + 1);
+        } else {
+            pagesCount.put(parentDomain, 1);
+        }
     }
 
+    private void countLemmas() {
+        if (lemmasCount.containsKey(parentDomain)) {
+            lemmasCount.put(parentDomain, lemmasCount.get(parentDomain) + 1);
+        } else {
+            lemmasCount.put(parentDomain, 1);
+        }
+    }
+
+    public static int getPagesCount(String site) {
+        return pagesCount.get(site);
+    }
+
+    public static int getLemmaCount(String site) {
+        return lemmasCount.get(site);
+    }
 }

@@ -8,7 +8,9 @@ import main.repositories.IndexRepository;
 import main.repositories.SiteRepository;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 
 public class IndexDBCombiner {
@@ -63,4 +65,11 @@ public class IndexDBCombiner {
         Parser.setCanceled(true);
     }
 
+    public int getPagesCount(String site) {
+        return Parser.getPagesCount(site);
+    }
+
+    public int getLemmasCount(String site) {
+        return Parser.getLemmaCount(site);
+    }
 }

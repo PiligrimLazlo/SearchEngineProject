@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,7 +48,9 @@ public class IndexServiceImpl implements IndexService {
     public IndexResponse startIndexing() {
         List<Site> sites = applicationProps.getSites();
 
-        if (isIndexingAll) return new IndexResponse(false, "Индексация уже запущена");
+        if (isIndexingAll) {
+            return new IndexResponse(true, "Индексация уже запущена");
+        }
         isIndexingAll = true;
 
         for (Site s : sites) {
@@ -99,16 +102,27 @@ public class IndexServiceImpl implements IndexService {
         TotalStatistics totalStatistics =
                 new TotalStatistics(sitesCount, pageRepo.count(), lemmaRepo.count(), isIndexingAll);
 
+
         List<DetailedStatistics> detailedStatistics =
-                Lists.newArrayList(siteRepo.findAll()).stream().map(site -> new DetailedStatistics(
-                        site.getUrl(),
-                        site.getName(),
-                        site.getStatus(),
-                        site.getStatusTime().getTime(),
-                        site.getLastError(),
-                        pageRepo.countPages(site.getId()),
-                        lemmaRepo.countLemmas(site.getId())
-                )).collect(Collectors.toList());
+                Lists.newArrayList(siteRepo.findAll()).stream().map(site -> {
+                    long time;
+                    long pagesCount = 0;
+                    long lemmasCount = 0;
+                    if (site.getStatus() == Status.INDEXING) {
+                        time = new Date().getTime();
+                        pagesCount = indexDbCombiner.getPagesCount(site.getUrl());
+                        lemmasCount = indexDbCombiner.getLemmasCount(site.getUrl());
+                    } else {
+                        time = site.getStatusTime().getTime();
+                        pagesCount = pageRepo.countPages(site.getId());
+                        lemmasCount = lemmaRepo.countLemmas(site.getId());
+                    }
+
+                    return new DetailedStatistics(
+                            site.getUrl(), site.getName(), site.getStatus(),
+                            time, site.getLastError(), pagesCount, lemmasCount
+                    );
+                }).collect(Collectors.toList());
 
         Statistics statistics = new Statistics(totalStatistics, detailedStatistics);
 
